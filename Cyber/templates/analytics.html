@@ -97,6 +97,67 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Intrusion Detection Metrics -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Intrusion Detection Metrics</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="fetchIdsMetrics()">
+                            <i class="fas fa-rotate"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <div class="small text-muted">Precision</div>
+                                    <div id="metricPrecision" class="h4 mb-0">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <div class="small text-muted">Recall</div>
+                                    <div id="metricRecall" class="h4 mb-0">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <div class="small text-muted">PR-AUC</div>
+                                    <div id="metricPRAUC" class="h4 mb-0">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <div class="small text-muted">FPR</div>
+                                    <div id="metricFPR" class="h4 mb-0">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="perAttackTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Attack Type</th>
+                                                <th>Recall</th>
+                                                <th>Precision</th>
+                                                <th>F1-Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="perAttackBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="small-chart-container">
+                                    <canvas id="perAttackChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Feature Importance and System Metrics -->
                 <div class="row">
@@ -201,6 +262,7 @@
         window.onload = function() {
             initializeCharts();
             updateSystemMetrics();
+            fetchIdsMetrics();
         };
 
         function initializeCharts() {
@@ -209,6 +271,71 @@
             createTimelineChart();
             createFeatureImportanceChart();
             createSystemMetricsChart();
+        }
+
+        // IDS metrics (precision/recall/PR-AUC/FPR) + per-attack table & chart
+        async function fetchIdsMetrics() {
+            try {
+                const resp = await fetch(api('/api/ids-realtime-metrics'));
+                const m = await resp.json();
+
+                const precision = Number(m.precision ?? m.Precision ?? 0);
+                const recall = Number(m.recall ?? m.Recall ?? 0);
+                const prAuc = Number(m.pr_auc ?? m.prAuc ?? 0);
+                const fpr = Number(m.false_positive_rate ?? m.FPR ?? 0);
+
+                document.getElementById('metricPrecision').textContent = precision.toFixed(3);
+                document.getElementById('metricRecall').textContent = recall.toFixed(3);
+                document.getElementById('metricPRAUC').textContent = prAuc.toFixed(3);
+                document.getElementById('metricFPR').textContent = fpr.toFixed(3);
+
+                // Per-attack matrix
+                const attackResp = await fetch(api('/api/attack-matrix-metrics'));
+                const matrix = await attackResp.json();
+
+                // Fill table
+                const tbody = document.getElementById('perAttackBody');
+                tbody.innerHTML = '';
+                const labels = [];
+                const recalls = [];
+                const precisions = [];
+
+                (matrix || []).forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="badge bg-secondary">${row.name}</span></td>
+                        <td>${Number(row.recall ?? row.Recall ?? 0).toFixed(3)}</td>
+                        <td>${Number(row.precision ?? row.Precision ?? 0).toFixed(3)}</td>
+                        <td>${Number(row.f1_score ?? row.F1_Score ?? 0).toFixed(3)}</td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    labels.push(row.name);
+                    recalls.push(Number(row.recall ?? row.Recall ?? 0));
+                    precisions.push(Number(row.precision ?? row.Precision ?? 0));
+                });
+
+                // Chart: per-attack recall vs precision
+                const ctx = document.getElementById('perAttackChart').getContext('2d');
+                if (window.perAttackChart) { try { window.perAttackChart.destroy(); } catch(e){} }
+                window.perAttackChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: 'Recall', data: recalls, backgroundColor: '#0d6efd' },
+                            { label: 'Precision', data: precisions, backgroundColor: '#20c997' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, max: 1 } }
+                    }
+                });
+            } catch (e) {
+                console.error('Failed to load IDS metrics:', e);
+            }
         }
 
         function createModelComparisonChart() {
