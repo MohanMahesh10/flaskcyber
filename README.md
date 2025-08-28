@@ -6,6 +6,9 @@ A lightweight cybersecurity demo application:
 
 This project is designed to be easy to run locally and easy to deploy.
 
+<img width="1918" height="868" alt="image" src="https://github.com/user-attachments/assets/aaa924da-35e5-49e7-8a0c-d5f696826000" />
+
+
 ---
 
 ## Table of Contents
