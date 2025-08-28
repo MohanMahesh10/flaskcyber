@@ -8,6 +8,15 @@ This project is designed to be easy to run locally and easy to deploy.
 
 <img width="1918" height="868" alt="image" src="https://github.com/user-attachments/assets/aaa924da-35e5-49e7-8a0c-d5f696826000" />
 
+<img width="1342" height="872" alt="image" src="https://github.com/user-attachments/assets/bf4a88f7-7a1d-4ef8-9543-2d75706f8cf1" />
+
+<img width="1911" height="850" alt="image" src="https://github.com/user-attachments/assets/373044c6-9f97-44dc-9127-6d74e4f985d4" />
+
+<img width="1912" height="870" alt="image" src="https://github.com/user-attachments/assets/bd480b04-3afc-4a03-b509-5a4f391953f1" />
+
+
+
+
 
 ---
 
