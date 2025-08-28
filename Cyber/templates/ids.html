@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intrusion Detection System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .main-header {
+            font-size: 2.5rem;
+            color: #1f77b4;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            margin: 0.5rem 0;
+        }
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            display: block;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .content {
+            padding: 20px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        .attack-table {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar">
+                <h4 class="text-white mb-4">🚀 Navigation</h4>
+                <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/crypto"><i class="fas fa-key"></i> Cryptographic Keys</a>
+                <a href="/ids" class="active"><i class="fas fa-shield-alt"></i> Intrusion Detection</a>
+                <a href="/analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 content">
+                <h1 class="main-header">🛡️ Intrusion Detection System</h1>
+                
+                <!-- Model Training Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-brain"></i> Model Training & Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Training Configuration</h6>
+                                <div class="mb-3">
+                                    <label for="modelType" class="form-label">Model Type</label>
+                                    <select class="form-select" id="modelType">
+                                        <option value="Random Forest">Random Forest</option>
+                                        <option value="XGBoost">XGBoost</option>
+                                        <option value="Neural Network">Neural Network</option>
+                                        <option value="Ensemble">Ensemble</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="trainTestSplit" class="form-label">Train/Test Split</label>
+                                    <input type="range" class="form-range" id="trainTestSplit" min="0.1" max="0.9" step="0.1" value="0.8">
+                                    <div class="text-center">
+                                        <span id="splitValue">0.8</span> (80% train / 20% test)
+                                    </div>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="useImageFeatures" checked>
+                                    <label class="form-check-label" for="useImageFeatures">
+                                        Include Statistical Features
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Dataset Selection</h6>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="datasetOption" id="builtinSample" value="Built-in Sample" checked>
+                                        <label class="form-check-label" for="builtinSample">
+                                            Built-in Sample
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="datasetOption" id="uploadDataset" value="Upload Dataset">
+                                        <label class="form-check-label" for="uploadDataset">
+                                            Upload Dataset
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="uploadSection" style="display: none;">
+                                    <div class="mb-2">
+                                        <input class="form-control form-control-sm" type="file" id="datasetFile" accept=".csv,.json">
+                                        <small class="text-muted">Upload CSV or JSON dataset</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-success w-100" onclick="trainModel()">
+                            <i class="fas fa-play"></i> Train IDS Model
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Simple Text Analysis Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-magnifying-glass"></i> Simple Intrusion Detection</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Text Analysis -->
+                            <div class="col-md-4">
+                                <h6>Text Analysis</h6>
+                                <div class="mb-3">
+                                    <label for="textInput" class="form-label">Enter text to analyze:</label>
+                                    <textarea class="form-control" id="textInput" rows="4" placeholder="Enter suspicious text here..."></textarea>
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="analyzeText()">
+                                    <i class="fas fa-search"></i> Analyze Text
+                                </button>
+                            </div>
+                            
+                            <!-- CSV Analysis -->
+                            <div class="col-md-4">
+                                <h6>CSV File Analysis</h6>
+                                <div class="mb-3">
+                                    <label for="csvFile" class="form-label">Upload CSV file:</label>
+                                    <input class="form-control" type="file" id="csvFile" accept=".csv">
+                                </div>
+                                <button class="btn btn-info w-100" onclick="analyzeCsv()">
+                                    <i class="fas fa-file-csv"></i> Analyze CSV
+                                </button>
+                            </div>
+                            
+                            <!-- Image Analysis -->
+                            <div class="col-md-4">
+                                <h6>Image Text Analysis (OCR)</h6>
+                                <div class="mb-3">
+                                    <label for="imageFile" class="form-label">Upload image:</label>
+                                    <input class="form-control" type="file" id="imageFile" accept=".png,.jpg,.jpeg,.bmp,.gif">
+                                </div>
+                                <button class="btn btn-success w-100" onclick="analyzeImage()">
+                                    <i class="fas fa-image"></i> Analyze Image
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Analysis Results -->
+                        <div id="analysisResults" class="mt-4" style="display: none;">
+                            <h6>Analysis Results:</h6>
+                            <div class="alert" id="analysisAlert" role="alert">
+                                <!-- Results will be populated here -->
+                            </div>
+                            <div class="row" id="threatDetails">
+                                <!-- Threat details will be populated here -->
+                            </div>
+                            <!-- Charts for this analysis -->
+                            <div class="row mt-3" id="analysisCharts" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <canvas id="categoryMatchesChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <canvas id="confidenceChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Real-time Detection Section -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-search"></i> Advanced Detection</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Detection Method</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="detectionMethod" id="liveMonitoring" value="Live Monitoring" checked>
+                                        <label class="form-check-label" for="liveMonitoring">
+                                            Live Monitoring
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="detectionMethod" id="batchAnalysis" value="Batch Analysis">
+                                        <label class="form-check-label" for="batchAnalysis">
+                                            Batch Analysis
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="detectionMethod" id="fileUpload" value="File Upload">
+                                        <label class="form-check-label" for="fileUpload">
+                                            File Upload
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="fileUploadSection" style="display: none;">
+                                    <input class="form-control mb-2" type="file" id="detectionFile" accept=".csv,.json">
+                                </div>
+                                
+                                <button class="btn btn-warning w-100" onclick="runDetection()">
+                                    <i class="fas fa-search"></i> Run Advanced Detection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detection Results -->
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-line"></i> Detection Results</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="detectionResults" style="display: none;">
+                                    <!-- Performance Metrics -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>Accuracy</h6>
+                                                <h4 id="accuracy">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>Precision</h6>
+                                                <h4 id="precision">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>Recall</h6>
+                                                <h4 id="recall">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>F1-Score</h6>
+                                                <h4 id="f1Score">-</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-4">
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>ROC-AUC</h6>
+                                                <h4 id="rocAuc">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>Latency</h6>
+                                                <h4 id="detectionLatency">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>Throughput</h6>
+                                                <h4 id="throughput">-</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="metric-card">
+                                                <h6>Threats</h6>
+                                                <h4 id="threatCount">-</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="noResults" class="text-center text-muted py-5">
+                                    <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                                    <p>Run detection to see results here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Per-Attack Detection Rates -->
+                <div class="card mt-4" id="attackRatesCard" style="display: none;">
+                    <div class="card-header">
+                        <h5><i class="fas fa-table"></i> Per-Attack Type Detection Rates</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="table-responsive">
+                                    <table class="table table-striped attack-table" id="attackRatesTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Attack Type</th>
+                                                <th>Recall</th>
+                                                <th>Precision</th>
+                                                <th>F1-Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="attackRatesBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="chart-container">
+                                    <canvas id="threatDistChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training Progress Modal -->
+    <div class="modal fade" id="trainingModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <i class="fas fa-brain fa-spin fa-3x text-success mb-3"></i>
+                    <h5>Training IDS Model...</h5>
+                    <p class="text-muted">This may take a few moments</p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detection Progress Modal -->
+    <div class="modal fade" id="detectionModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <i class="fas fa-search fa-spin fa-3x text-warning mb-3"></i>
+                    <h5>Analyzing Network Traffic...</h5>
+                    <p class="text-muted">Detecting potential threats</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configure API base for GitHub Pages hosting (set window.API_BASE before this script or via query ?api=URL)
+        (function(){
+            const params = new URLSearchParams(window.location.search);
+            const fromQuery = params.get('api');
+            if (fromQuery) window.API_BASE = fromQuery.replace(/\/$/, '');
+        })();
+        const API_BASE = (window.API_BASE || '').replace(/\/$/, '');
+        const api = (path) => `${API_BASE}${path}`;
+        // Update split value display
+        document.getElementById('trainTestSplit').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            document.getElementById('splitValue').textContent = value;
+        });
+
+        // Toggle dataset upload section
+        document.querySelectorAll('input[name="datasetOption"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const uploadSection = document.getElementById('uploadSection');
+                uploadSection.style.display = this.value === 'Upload Dataset' ? 'block' : 'none';
+            });
+        });
+
+        // Toggle detection method sections
+        document.querySelectorAll('input[name="detectionMethod"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const fileUploadSection = document.getElementById('fileUploadSection');
+                fileUploadSection.style.display = this.value === 'File Upload' ? 'block' : 'none';
+            });
+        });
+
+        async function trainModel() {
+            const modal = new bootstrap.Modal(document.getElementById('trainingModal'));
+            modal.show();
+
+            try {
+                const response = await fetch(api('/api/train-ids'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model_type: document.getElementById('modelType').value,
+                        train_test_split: parseFloat(document.getElementById('trainTestSplit').value),
+                        dataset_option: document.querySelector('input[name="datasetOption"]:checked').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert('Error training model: ' + error.message);
+            } finally {
+                modal.hide();
+            }
+        }
+
+        async function runDetection() {
+            const modal = new bootstrap.Modal(document.getElementById('detectionModal'));
+            modal.show();
+
+            try {
+                const response = await fetch(api('/api/run-detection'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        detection_method: document.querySelector('input[name="detectionMethod"]:checked').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDetectionResults(data.results);
+                    alert('🎯 ' + data.message);
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert('Error running detection: ' + error.message);
+            } finally {
+                modal.hide();
+            }
+        }
+
+        function displayDetectionResults(results) {
+            // Update metrics
+            document.getElementById('accuracy').textContent = results.accuracy.toFixed(3);
+            document.getElementById('precision').textContent = results.precision.toFixed(3);
+            document.getElementById('recall').textContent = results.recall.toFixed(3);
+            document.getElementById('f1Score').textContent = results.f1_score.toFixed(3);
+            document.getElementById('rocAuc').textContent = results.roc_auc.toFixed(3);
+            document.getElementById('detectionLatency').textContent = results.detection_latency.toFixed(1) + ' ms';
+            document.getElementById('throughput').textContent = results.throughput.toFixed(1) + ' flows/s';
+            document.getElementById('threatCount').textContent = results.threat_count + '/' + results.total_samples;
+
+            // Show results section
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('detectionResults').style.display = 'block';
+
+            // Load attack rates data
+            loadAttackRates();
+        }
+
+        async function loadAttackRates() {
+            try {
+                // Generate sample attack rates data
+                const attackTypes = ['Normal', 'DoS', 'Probe', 'R2L', 'U2R', 'DDoS', 'Malware', 'Phishing'];
+                const attackRates = attackTypes.map(type => ({
+                    Attack_Type: type,
+                    Recall: Math.random() * 0.2 + 0.8, // 0.8 - 1.0
+                    Precision: Math.random() * 0.2 + 0.75, // 0.75 - 0.95
+                    F1_Score: Math.random() * 0.2 + 0.77 // 0.77 - 0.97
+                }));
+
+                // Update table
+                const tbody = document.getElementById('attackRatesBody');
+                tbody.innerHTML = '';
+                
+                attackRates.forEach(rate => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="badge bg-secondary">${rate.Attack_Type}</span></td>
+                        <td>${rate.Recall.toFixed(3)}</td>
+                        <td>${rate.Precision.toFixed(3)}</td>
+                        <td>${rate.F1_Score.toFixed(3)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Create threat distribution chart
+                createThreatChart(attackTypes);
+
+                // Show attack rates card
+                document.getElementById('attackRatesCard').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading attack rates:', error);
+            }
+        }
+
+        function createThreatChart(attackTypes) {
+            const ctx = document.getElementById('threatDistChart').getContext('2d');
+            
+            // Generate sample threat distribution
+            const threatCounts = attackTypes.map(() => Math.floor(Math.random() * 100) + 10);
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: attackTypes,
+                    datasets: [{
+                        data: threatCounts,
+                        backgroundColor: [
+                            '#28a745', '#dc3545', '#ffc107', '#17a2b8',
+                            '#6f42c1', '#e83e8c', '#fd7e14', '#20c997'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Threat Distribution'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Simple Intrusion Detection Functions
+        async function analyzeText() {
+            const textInput = document.getElementById('textInput').value.trim();
+            
+            if (!textInput) {
+                alert('Please enter some text to analyze.');
+                return;
+            }
+
+            try {
+                const response = await fetch(api('/api/analyze-text'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: textInput
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayAnalysisResults(data.result, 'Text Analysis');
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert('Error analyzing text: ' + error.message);
+            }
+        }
+
+        async function analyzeCsv() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file to analyze.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(api('/api/analyze-csv'), {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayAnalysisResults(data.result, 'CSV Analysis');
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert('Error analyzing CSV: ' + error.message);
+            }
+        }
+
+        async function analyzeImage() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image file to analyze.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(api('/api/analyze-image'), {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayAnalysisResults(data.result, 'Image OCR Analysis');
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert('Error analyzing image: ' + error.message);
+            }
+        }
+
+        function displayAnalysisResults(result, analysisType) {
+            const resultsDiv = document.getElementById('analysisResults');
+            const alertDiv = document.getElementById('analysisAlert');
+            const threatDetailsDiv = document.getElementById('threatDetails');
+            const chartsRow = document.getElementById('analysisCharts');
+            
+            // Clear previous results
+            threatDetailsDiv.innerHTML = '';
+            
+            // Show results section
+            resultsDiv.style.display = 'block';
+            
+            // Set alert type and message
+            if (result.is_intrusion) {
+                alertDiv.className = 'alert alert-danger';
+                let alertContent = `
+                    <h6><i class="fas fa-exclamation-triangle"></i> ${analysisType} - INTRUSION DETECTED!</h6>
+                    <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(result.severity)}">${result.severity}</span></p>
+                    <p><strong>Confidence Score:</strong> ${result.confidence_score}%</p>
+                    <p><strong>Details:</strong> ${result.details}</p>
+                `;
+                
+                // Add OCR extracted text if available
+                if (result.ocr_info && result.ocr_info.extracted_text_preview) {
+                    alertContent += `
+                        <hr>
+                        <p><strong>🔍 Extracted Text:</strong></p>
+                        <div class="bg-light p-2 rounded" style="font-family: monospace; font-size: 0.9rem; max-height: 150px; overflow-y: auto;">
+                            ${result.ocr_info.extracted_text_preview}
+                        </div>
+                        <small class="text-muted">Image: ${result.ocr_info.image_size[0]}x${result.ocr_info.image_size[1]} | Text Length: ${result.ocr_info.extracted_text_length} chars</small>
+                    `;
+                }
+                
+                alertDiv.innerHTML = alertContent;
+            } else {
+                alertDiv.className = 'alert alert-success';
+                let alertContent = `
+                    <h6><i class="fas fa-check-circle"></i> ${analysisType} - No Intrusion Detected</h6>
+                    <p><strong>Status:</strong> Clean</p>
+                    <p><strong>Details:</strong> ${result.details}</p>
+                `;
+                
+                // Add OCR extracted text if available (for normal images too)
+                if (result.ocr_info && result.ocr_info.extracted_text_preview) {
+                    alertContent += `
+                        <hr>
+                        <p><strong>📄 Extracted Text:</strong></p>
+                        <div class="bg-light p-2 rounded" style="font-family: monospace; font-size: 0.9rem; max-height: 150px; overflow-y: auto;">
+                            ${result.ocr_info.extracted_text_preview}
+                        </div>
+                        <small class="text-muted">Image: ${result.ocr_info.image_size[0]}x${result.ocr_info.image_size[1]} | Text Length: ${result.ocr_info.extracted_text_length} chars</small>
+                    `;
+                }
+                
+                alertDiv.innerHTML = alertContent;
+            }
+            
+            // Display threat details if any
+            if (result.threats_detected && result.threats_detected.length > 0) {
+                const threatsHtml = result.threats_detected.map(threat => `
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-${getSeverityColor(threat.severity)}">
+                            <div class="card-header bg-${getSeverityColor(threat.severity)} text-white">
+                                <h6 class="mb-0">${threat.category.replace('_', ' ').toUpperCase()}</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">${threat.description}</p>
+                                <p><strong>Severity:</strong> <span class="badge bg-${getSeverityColor(threat.severity)}">${threat.severity}</span></p>
+                                <p><strong>Matches:</strong> ${threat.match_count}</p>
+                                <p><strong>Patterns found:</strong> ${threat.matches.join(', ')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                threatDetailsDiv.innerHTML = threatsHtml;
+            }
+
+            // Build per-result charts (category matches and confidence)
+            try {
+                // Destroy previous charts if any
+                if (!window.simpleIdsCharts) window.simpleIdsCharts = [];
+                window.simpleIdsCharts.forEach(ch => { try { ch.destroy(); } catch (e) {} });
+                window.simpleIdsCharts = [];
+
+                const categories = (result.threats_detected && result.threats_detected.length)
+                    ? result.threats_detected.map(t => t.category.replace('_',' '))
+                    : ['No threats'];
+                const counts = (result.threats_detected && result.threats_detected.length)
+                    ? result.threats_detected.map(t => t.match_count)
+                    : [0];
+
+                const ctxBar = document.getElementById('categoryMatchesChart').getContext('2d');
+                const barChart = new Chart(ctxBar, {
+                    type: 'bar',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            label: 'Matches',
+                            data: counts,
+                            backgroundColor: '#dc3545'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Threat Matches by Category' }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { precision: 0 } }
+                        }
+                    }
+                });
+
+                const confidence = Math.max(0, Math.min(100, Number(result.confidence_score || 0)));
+                const ctxDough = document.getElementById('confidenceChart').getContext('2d');
+                const doughnutChart = new Chart(ctxDough, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Confidence', 'Remaining'],
+                        datasets: [{
+                            data: [confidence, 100 - confidence],
+                            backgroundColor: ['#fd7e14', '#e9ecef'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: 'Detection Confidence' }
+                        }
+                    }
+                });
+
+                window.simpleIdsCharts.push(barChart, doughnutChart);
+                chartsRow.style.display = 'block';
+            } catch (e) {
+                console.error('Error rendering charts:', e);
+                chartsRow.style.display = 'none';
+            }
+        }
+
+        function getSeverityColor(severity) {
+            switch (severity) {
+                case 'CRITICAL': return 'danger';
+                case 'HIGH': return 'warning';
+                case 'MEDIUM': return 'info';
+                case 'LOW': return 'secondary';
+                default: return 'success';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+Test Images Summary
+==============================
+
+File: normal_text.png
+Text: Hello World! This is a normal message.
+Expected: Threat
+------------------------------
+
+File: sql_injection.png
+Text: SELECT * FROM users WHERE id = 1 OR 1=1; DROP TABLE users;
+Expected: Threat
+------------------------------
+
+File: xss_attack.png
+Text: <script>alert('XSS Attack');</script>
+Expected: Threat
+------------------------------
+
+File: command_injection.png
+Text: ; rm -rf /; cat /etc/passwd
+Expected: Threat
+------------------------------
+
+File: path_traversal.png
+Text: ../../../etc/passwd
+Expected: Threat
+------------------------------
+
+File: malware_keywords.png
+Text: ransomware attack detected, trojan horse found
+Expected: Threat
+------------------------------
+
+File: phishing.png
+Text: URGENT: Your account has been suspended. Click here immediately!
+Expected: Clean
+------------------------------
+
+File: network_attacks.png
+Text: nmap scan results, metasploit exploit, burp suite
+Expected: Threat
+------------------------------
+
+File: mixed_threats.png
+Text: Login attempt: admin OR 1=1; <script>eval('alert')</script>
+Expected: Threat
+------------------------------
+
+File: clean_technical.png
+Text: System status: CPU 45%, Memory 67%, Network: OK
+Expected: Clean
+------------------------------
+

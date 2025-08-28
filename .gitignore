@@ -1,0 +1,74 @@
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyd.dylib
+*.so
+*.egg-info/
+.eggs/
+*.egg
+
+# Build and distribution
+build/
+dist/
+wheelhouse/
+*.whl
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Package managers and metadata
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Test, coverage and tooling
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temp
+*.log
+logs/
+*.tmp
+.tmp/
+.cache/
+
+# App/runtime artifacts
+uploads/
+Cyber/uploads/
+
+# Images or large artifacts generated locally (keep committed test_images)
+*.png~
+*.jpg~
+*.jpeg~
+
+# Node (if any subtools)
+node_modules/
+
+# Render/Deploy local overrides
+.env
+.env.*

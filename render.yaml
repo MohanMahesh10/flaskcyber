@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: flaskcyber-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r Cyber/requirements_flask.txt
+    startCommand: python Cyber/app_flask.py
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Key Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .main-header {
+            font-size: 2rem;
+            color: #1f77b4;
+            text-align: center;
+            margin: 1rem 0 2rem;
+        }
+        .key-display {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            word-break: break-all;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="main-header">🔑 Cryptographic Key Generator</h1>
+        
+        <div class="row">
+            <!-- Configuration Panel -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-cog"></i> Key Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="keyType" class="form-label">Key Type</label>
+                            <select class="form-select mb-3" id="keyType" onchange="updateKeySizeOptions()">
+                                <option value="RSA">RSA (Asymmetric)</option>
+                                <option value="AES">AES (Symmetric)</option>
+                            </select>
+                            
+                            <label for="keySize" class="form-label">Key Size</label>
+                            <select class="form-select mb-3" id="keySize">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                            
+                            <label for="entropySource" class="form-label">Entropy Source (Optional)</label>
+                            <div class="mb-3">
+                                <select class="form-select mb-2" id="entropyMethod" onchange="updateEntropyInput()">
+                                    <option value="system">System Random (Default)</option>
+                                    <option value="text">Custom Text</option>
+                                    <option value="file">File Upload</option>
+                                </select>
+                                
+                                <div id="textEntropyInput" style="display: none;">
+                                    <textarea class="form-control" id="entropyText" rows="3" 
+                                              placeholder="Enter text to be used as additional entropy source..."></textarea>
+                                    <small class="text-muted">This text will be combined with system randomness for key generation.</small>
+                                </div>
+                                
+                                <div id="fileEntropyInput" style="display: none;">
+                                    <input type="file" class="form-control" id="entropyFile" 
+                                           accept=".txt,.jpg,.png,.pdf,.doc,.docx" 
+                                           onchange="handleEntropyFile()">
+                                    <small class="text-muted">Upload a file to use as entropy source. Supports text, images, and documents.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100" onclick="generateKeys()">
+                            <i class="fas fa-key"></i> Generate Keys
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Metrics -->
+                <div id="metricsSection" style="display: none;">
+                    <div class="metric-card">
+                        <h6><i class="fas fa-clock"></i> Generation Time</h6>
+                        <h4 id="generationTime">-</h4>
+                    </div>
+                    <div class="metric-card">
+                        <h6><i class="fas fa-lock"></i> Encryption Time (ms)</h6>
+                        <h4 id="encryptionTime">-</h4>
+                    </div>
+                    <div class="metric-card">
+                        <h6><i class="fas fa-unlock"></i> Decryption Time (ms)</h6>
+                        <h4 id="decryptionTime">-</h4>
+                    </div>
+                    <div class="metric-card">
+                        <h6><i class="fas fa-shield-alt"></i> Key Strength</h6>
+                        <h4 id="keyStrength">-</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Panel -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-key"></i> Generated Keys</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Generating RSA keys. This may take a moment...</p>
+                        </div>
+                        
+                        <div id="keysContainer" style="display: none;">
+                            <div id="keyTypeDisplay" class="h5 mb-3">RSA Keys</div>
+                            
+                            <!-- RSA Keys Container -->
+                            <div id="rsaKeysContainer">
+                                <ul class="nav nav-tabs" id="keyTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="private-tab" data-bs-toggle="tab" data-bs-target="#private" type="button" role="tab">Private Key</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="public-tab" data-bs-toggle="tab" data-bs-target="#public" type="button" role="tab">Public Key</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content p-3 border border-top-0 rounded-bottom">
+                                    <div class="tab-pane fade show active" id="private" role="tabpanel">
+                                        <div class="key-display" id="privateKey">
+                                            Private key will appear here
+                                        </div>
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('privateKey')">
+                                                <i class="far fa-copy"></i> Copy
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="downloadKey('private')">
+                                                <i class="fas fa-download"></i> Download
+                                            </button>
+                                        </div>
+                                        <div class="mt-3" id="rsaDecryptedTextBlock" style="display: none;">
+                                            <label class="form-label">Decrypted Text (from custom entropy)</label>
+                                            <div class="key-display" id="rsaDecryptedText">N/A</div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-outline-primary" id="btnShowRsaDecryptedText" onclick="showRsaDecryptedText()" style="display: none;">
+                                                <i class="fas fa-eye"></i> Generate decrypted text
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="public" role="tabpanel">
+                                        <div class="key-display" id="publicKey">
+                                            Public key will appear here
+                                        </div>
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('publicKey')">
+                                                <i class="far fa-copy"></i> Copy
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="downloadKey('public')">
+                                                <i class="fas fa-download"></i> Download
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- AES Key Container -->
+                            <div id="aesKeyContainer" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">AES Key</label>
+                                    <div class="key-display" id="aesKey">
+                                        AES key will appear here
+                                    </div>
+                                    <div class="mt-2">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('aesKey')">
+                                            <i class="far fa-copy"></i> Copy Key
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="downloadKey('aes')">
+                                            <i class="fas fa-download"></i> Download Key
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Encrypted AES Key (ECB demo)</label>
+                                    <div class="key-display" id="aesKeyEncrypted">
+                                        Encrypted AES key will appear here
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Decrypted AES Key (verification)</label>
+                                    <div class="key-display" id="aesKeyDecrypted">
+                                        Decrypted AES key will appear here
+                                    </div>
+                                    <div class="mt-2">
+                                        <button class="btn btn-sm btn-outline-primary" id="btnShowDecryptedText" onclick="showDecryptedText()" style="display: none;">
+                                            <i class="fas fa-eye"></i> Generate decrypted text
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3" id="decryptedTextBlock" style="display: none;">
+                                    <label class="form-label">Decrypted Text (from custom entropy)</label>
+                                    <div class="key-display" id="aesDecryptedText">N/A</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        (function(){
+            const params = new URLSearchParams(window.location.search);
+            const fromQuery = params.get('api');
+            if (fromQuery) window.API_BASE = fromQuery.replace(/\/$/, '');
+        })();
+        const API_BASE = (window.API_BASE || '').replace(/\/$/, '');
+        const api = (path) => `${API_BASE}${path}`;
+        // Initialize key size options when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            updateKeySizeOptions();
+        });
+        
+        // Update key size options based on selected key type
+        function updateKeySizeOptions() {
+            const keyType = document.getElementById('keyType').value;
+            const keySizeSelect = document.getElementById('keySize');
+            
+            // Clear existing options
+            keySizeSelect.innerHTML = '';
+            
+            if (keyType === 'RSA') {
+                // Add RSA key size options
+                const rsaSizes = [
+                    { value: '2048', text: '2048 bits (Recommended)' },
+                    { value: '3072', text: '3072 bits (High Security)' },
+                    { value: '4096', text: '4096 bits (Maximum Security)' }
+                ];
+                
+                rsaSizes.forEach(size => {
+                    const option = document.createElement('option');
+                    option.value = size.value;
+                    option.textContent = size.text;
+                    keySizeSelect.appendChild(option);
+                });
+            } else if (keyType === 'AES') {
+                // Add AES key size options
+                const aesSizes = [
+                    { value: '128', text: '128 bits (Good)' },
+                    { value: '192', text: '192 bits (Better)' },
+                    { value: '256', text: '256 bits (Best)' }
+                ];
+                
+                aesSizes.forEach(size => {
+                    const option = document.createElement('option');
+                    option.value = size.value;
+                    option.textContent = size.text;
+                    keySizeSelect.appendChild(option);
+                });
+            }
+        }
+        
+        async function generateKeys() {
+            const keyType = document.getElementById('keyType').value;
+            const keySize = document.getElementById('keySize').value;
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const keysContainer = document.getElementById('keysContainer');
+            const metricsSection = document.getElementById('metricsSection');
+            const keyTypeDisplay = document.getElementById('keyTypeDisplay');
+            
+            // Show loading, hide previous results
+            loadingIndicator.style.display = 'block';
+            keysContainer.style.display = 'none';
+            metricsSection.style.display = 'none';
+            
+            try {
+                const startTime = performance.now();
+                
+                // Get entropy data if provided
+                const entropyData = await getEntropyData();
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('key_type', keyType);
+                formData.append('key_size', keySize);
+                
+                // Add entropy data if available
+                if (entropyData) {
+                    const entropyMethod = document.getElementById('entropyMethod').value;
+                    formData.append('entropy_method', entropyMethod);
+                    
+                    if (entropyMethod === 'text') {
+                        formData.append('entropy_text', entropyData);
+                    } else if (entropyMethod === 'file') {
+                        const file = document.getElementById('entropyFile').files[0];
+                        if (file) {
+                            formData.append('entropy_file', file);
+                        }
+                    }
+                }
+                
+                // Set headers for JSON response
+                const headers = new Headers();
+                headers.append('X-Requested-With', 'XMLHttpRequest');
+                
+                // Call the API endpoint
+                const response = await fetch(api('/crypto'), {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || data.error || 'Failed to generate keys');
+                }
+                // cache response for restoreEntropyText
+                window.lastCryptoResponse = data;
+                
+                // Update UI with the generated keys
+                keyTypeDisplay.textContent = keyType;
+                
+                if (keyType === 'RSA') {
+                    document.getElementById('privateKey').textContent = data.private_key || 'N/A';
+                    document.getElementById('publicKey').textContent = data.public_key || 'N/A';
+                    document.getElementById('aesKeyContainer').style.display = 'none';
+                    document.getElementById('rsaKeysContainer').style.display = 'block';
+                    // Setup RSA decrypted text UI
+                    const hasEntropyText = data?.entropy?.method === 'text' && !!data?.entropy?.text;
+                    document.getElementById('btnShowRsaDecryptedText').style.display = hasEntropyText ? 'inline-block' : 'none';
+                    document.getElementById('rsaDecryptedTextBlock').style.display = 'none';
+                } else if (keyType === 'AES') {
+                    document.getElementById('aesKey').textContent = data.key || 'N/A';
+                    document.getElementById('aesKeyEncrypted').textContent = data.encrypted_key || 'N/A';
+                    document.getElementById('aesKeyDecrypted').textContent = data.decrypted_key || 'N/A';
+                    document.getElementById('aesKeyContainer').style.display = 'block';
+                    document.getElementById('rsaKeysContainer').style.display = 'none';
+                    // Setup decrypted text UI
+                    const hasEntropyText = data?.entropy?.method === 'text' && !!data?.entropy?.text;
+                    document.getElementById('btnShowDecryptedText').style.display = hasEntropyText ? 'inline-block' : 'none';
+                    document.getElementById('decryptedTextBlock').style.display = 'none';
+                }
+                
+                const generationTime = data.generation_time ? 
+                    parseFloat(data.generation_time).toFixed(4) : 
+                    ((performance.now() - startTime) / 1000).toFixed(4);
+                
+                document.getElementById('generationTime').textContent = `${generationTime} seconds`;
+                if (keyType === 'RSA') {
+                    const enc = data.encryption_time_ms;
+                    const dec = data.decryption_time_ms;
+                    document.getElementById('encryptionTime').textContent = (enc !== null && enc !== undefined) ? enc.toFixed(2) : 'N/A';
+                    document.getElementById('decryptionTime').textContent = (dec !== null && dec !== undefined) ? dec.toFixed(2) : 'N/A';
+                } else {
+                    const enc = data.encryption_time_ms;
+                    const dec = data.decryption_time_ms;
+                    document.getElementById('encryptionTime').textContent = (enc !== null && enc !== undefined) ? enc.toFixed(2) : 'N/A';
+                    document.getElementById('decryptionTime').textContent = (dec !== null && dec !== undefined) ? dec.toFixed(2) : 'N/A';
+                }
+                document.getElementById('keyStrength').textContent = `${keySize}-bit (${getSecurityLevel(keySize, keyType)})`;
+                
+                // Show results
+                loadingIndicator.style.display = 'none';
+                keysContainer.style.display = 'block';
+                metricsSection.style.display = 'block';
+                
+                // Scroll to results
+                keysContainer.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                loadingIndicator.style.display = 'none';
+                alert(`Error: ${error.message}`);
+                console.error('Key generation failed:', error);
+            }
+        }
+
+        function showDecryptedText() {
+            const entropy = (window.lastCryptoResponse && window.lastCryptoResponse.entropy) || null;
+            if (entropy && entropy.method === 'text' && entropy.text) {
+                document.getElementById('aesDecryptedText').textContent = entropy.text;
+                document.getElementById('decryptedTextBlock').style.display = 'block';
+            }
+        }
+
+        function showRsaDecryptedText() {
+            const resp = window.lastCryptoResponse || null;
+            if (resp && resp.decrypted_text) {
+                document.getElementById('rsaDecryptedText').textContent = resp.decrypted_text;
+                document.getElementById('rsaDecryptedTextBlock').style.display = 'block';
+            } else {
+                // fallback to entropy preview if available
+                const entropy = resp && resp.entropy;
+                if (entropy && entropy.method === 'text' && entropy.text) {
+                    document.getElementById('rsaDecryptedText').textContent = entropy.text;
+                    document.getElementById('rsaDecryptedTextBlock').style.display = 'block';
+                }
+            }
+        }
+        
+        function getSecurityLevel(keySize, keyType) {
+            const size = parseInt(keySize);
+            if (keyType === 'RSA') {
+                if (size >= 4096) return 'Maximum';
+                if (size >= 3072) return 'High';
+                if (size >= 2048) return 'Good';
+                return 'Insecure';
+            } else if (keyType === 'AES') {
+                if (size === 256) return 'Maximum';
+                if (size === 192) return 'High';
+                if (size === 128) return 'Good';
+                return 'Insecure';
+            }
+            return 'Standard';
+        }
+        
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Show success feedback
+                const button = document.querySelector(`[onclick*="${elementId}"]`);
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy text. Please try again.');
+            });
+        }
+        
+        function downloadKey(keyType) {
+            let content, filename;
+            const keyTypeName = document.getElementById('keyType').value;
+            const date = new Date().toISOString().split('T')[0];
+            
+            if (keyType === 'aes') {
+                content = document.getElementById('aesKey').textContent;
+                filename = `aes_${document.getElementById('keySize').value}_key_${date}.txt`;
+            } else if (keyType === 'private' || keyType === 'public') {
+                content = document.getElementById(`${keyType}Key`).textContent;
+                filename = `rsa_${keyType}_key_${date}.pem`;
+            } else {
+                console.error('Invalid key type for download');
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function updateEntropyInput() {
+            const entropyMethod = document.getElementById('entropyMethod').value;
+            const textInput = document.getElementById('textEntropyInput');
+            const fileInput = document.getElementById('fileEntropyInput');
+            
+            // Hide all input methods first
+            textInput.style.display = 'none';
+            fileInput.style.display = 'none';
+            
+            // Show the selected input method
+            if (entropyMethod === 'text') {
+                textInput.style.display = 'block';
+            } else if (entropyMethod === 'file') {
+                fileInput.style.display = 'block';
+            }
+        }
+        
+        function handleEntropyFile() {
+            const fileInput = document.getElementById('entropyFile');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                console.log(`Selected entropy file: ${file.name} (${file.size} bytes)`);
+                // The file will be processed during key generation
+            }
+        }
+        
+        async function getEntropyData() {
+            const entropyMethod = document.getElementById('entropyMethod').value;
+            
+            if (entropyMethod === 'text') {
+                const textInput = document.getElementById('entropyText').value;
+                return textInput || null;
+            } else if (entropyMethod === 'file') {
+                const fileInput = document.getElementById('entropyFile');
+                const file = fileInput.files[0];
+                
+                if (file) {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            resolve(e.target.result);
+                        };
+                        reader.onerror = function(e) {
+                            reject(new Error('Failed to read file'));
+                        };
+                        
+                        // Read as text for text files, as data URL for binary files
+                        if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+                            reader.readAsText(file);
+                        } else {
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            }
+            
+            return null;
+        }
+    </script>
+</body>
+</html>
