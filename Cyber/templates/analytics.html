@@ -639,14 +639,42 @@
 
         async function exportCSV() {
             try {
-                window.open('/api/export-csv', '_blank');
+                window.open(api('/api/export-csv'), '_blank');
             } catch (error) {
                 alert('Error exporting CSV: ' + error.message);
             }
         }
 
         async function exportVisualizations() {
-            alert('📈 Visualization export functionality ready!\n\nThis feature allows you to export all charts as images or PDF format.');
+            try {
+                // Collect all canvas charts on the page
+                const canvases = Array.from(document.querySelectorAll('canvas'));
+                if (!canvases.length) { alert('No charts found to export.'); return; }
+
+                const htmlParts = [
+                    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Visualizations Export</title></head><body>',
+                    '<h2>Exported Visualizations</h2>'
+                ];
+
+                for (const c of canvases) {
+                    const dataUrl = c.toDataURL('image/png');
+                    htmlParts.push(`<div style="margin:10px 0;"><img src="${dataUrl}" style="max-width:100%;border:1px solid #ccc"/></div>`);
+                }
+
+                htmlParts.push('</body></html>');
+                const blob = new Blob([htmlParts.join('\n')], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `visualizations_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('Error exporting visualizations: ' + error.message);
+            }
         }
 
         async function generateReport() {
@@ -654,7 +682,7 @@
             modal.show();
 
             try {
-                window.open('/api/generate-report', '_blank');
+                window.open(api('/api/generate-report'), '_blank');
                 setTimeout(() => {
                     modal.hide();
                 }, 2000);
